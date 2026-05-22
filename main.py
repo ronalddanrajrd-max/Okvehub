@@ -1,7 +1,8 @@
 import os
+import asyncio
 import discord
 from discord.ext import commands
-import asyncio
+from config import TOKEN
 
 intents = discord.Intents.all()
 
@@ -10,28 +11,36 @@ bot = commands.Bot(
     intents=intents
 )
 
+COGS = [
+    "cogs.shop",
+    "cogs.tickets",
+    "cogs.payments",
+    "cogs.admin",
+    "cogs.moderation",
+    "cogs.announcements"
+]
+
 @bot.event
 async def on_ready():
-    print(f"✅ Connected as {bot.user}")
+    print(f"✅ Bot connecté : {bot.user}")
 
     try:
         synced = await bot.tree.sync()
-        print(f"✅ Synced {len(synced)} commands")
+        print(f"✅ Slash commands sync : {len(synced)}")
     except Exception as e:
-        print(e)
+        print(f"❌ Sync error : {e}")
 
 async def load_cogs():
-
-    await bot.load_extension("cogs.shop")
-    await bot.load_extension("cogs.tickets")
-    await bot.load_extension("cogs.payments")
-    await bot.load_extension("cogs.moderation")
-    await bot.load_extension("cogs.admin")
+    for cog in COGS:
+        try:
+            await bot.load_extension(cog)
+            print(f"✅ Loaded {cog}")
+        except Exception as e:
+            print(f"❌ Error loading {cog}: {e}")
 
 async def main():
-
     async with bot:
         await load_cogs()
-        await bot.start(os.getenv("TOKEN"))
+        await bot.start(TOKEN)
 
 asyncio.run(main())
