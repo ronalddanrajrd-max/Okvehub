@@ -1,15 +1,11 @@
-import os
-import asyncio
 import discord
 from discord.ext import commands
+import asyncio
 from config import TOKEN
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(
-    command_prefix="!",
-    intents=intents
-)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 COGS = [
     "cogs.shop",
@@ -26,17 +22,17 @@ async def on_ready():
 
     try:
         synced = await bot.tree.sync()
-        print(f"✅ Slash commands sync : {len(synced)}")
+        print(f"✅ Commandes sync : {len(synced)}")
     except Exception as e:
-        print(f"❌ Sync error : {e}")
+        print(f"❌ Erreur sync : {e}")
 
 async def load_cogs():
     for cog in COGS:
         try:
             await bot.load_extension(cog)
-            print(f"✅ Loaded {cog}")
+            print(f"✅ Cog chargé : {cog}")
         except Exception as e:
-            print(f"❌ Error loading {cog}: {e}")
+            print(f"❌ Erreur cog {cog} : {e}")
 
 async def main():
     async with bot:
