@@ -3,14 +3,9 @@ from discord.ext import commands
 import requests
 import asyncio
 from database import load, save
-from config import (
-    CUSTOMER_ROLE_ID,
-    LOG_CHANNEL_ID,
-    PRODUCT_NAME,
-    PRODUCT_LINK
-)
+from config import CUSTOMER_ROLE_ID, LOG_CHANNEL_ID, PRODUCT_NAME, PRODUCT_LINK
 
-async def log(guild, message):
+async def send_log(guild, message):
     channel = guild.get_channel(LOG_CHANNEL_ID)
     if channel:
         await channel.send(message)
@@ -57,7 +52,7 @@ class Payments(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @discord.app_commands.command(name="verify-robux", description="Vérifier un achat Robux Gamepass")
+    @discord.app_commands.command(name="verify-robux", description="Vérifier achat Robux Gamepass")
     async def verify_robux(
         self,
         interaction: discord.Interaction,
@@ -97,7 +92,7 @@ class Payments(commands.Cog):
 
             if not owns_gamepass(user_id, gamepass_id):
                 embed.title = "❌ GAMEPASS NOT FOUND"
-                embed.description = "Le gamepass n'a pas été détecté sur ce compte."
+                embed.description = "Le gamepass n’a pas été détecté."
                 embed.color = 0xff0000
                 return await msg.edit(embed=embed)
 
@@ -122,14 +117,14 @@ class Payments(commands.Cog):
         })
         save(data)
 
-        await log(
+        await send_log(
             interaction.guild,
-            f"🎮 Robux validé pour {interaction.user.mention} | Roblox: `{username}`"
+            f"🎮 Robux validé pour {interaction.user.mention} | Roblox : `{username}`"
         )
 
         embed.title = "✅ ROBUX PAYMENT CONFIRMED"
         embed.description = (
-            "Achat validé.\n\n"
+            "✅ Achat validé.\n\n"
             "📦 Produit envoyé en DM.\n"
             "🎖 Rôle Customer ajouté."
         )
