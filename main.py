@@ -4,7 +4,6 @@ from discord.ext import commands
 from discord import app_commands
 
 intents = discord.Intents.all()
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # =========================
@@ -16,30 +15,47 @@ async def on_ready():
 
     try:
         synced = await bot.tree.sync()
-        print(f"✅ {len(synced)} commandes synchronisées")
+        print(f"✅ {len(synced)} commandes sync")
     except Exception as e:
         print(e)
 
 # =========================
-# RESET (SUPPRIME TOUT)
+# RESET (SALONS + RÔLES SAFE)
 # =========================
-@bot.tree.command(name="reset", description="Supprime tous les salons et catégories")
+@bot.tree.command(name="reset", description="Reset complet du serveur (safe)")
 async def reset(interaction: discord.Interaction):
 
     if not interaction.user.guild_permissions.administrator:
         return await interaction.response.send_message(
-            "❌ Tu n'as pas la permission.",
+            "❌ Permission refusée.",
             ephemeral=True
         )
 
     await interaction.response.send_message(
-        "🗑 Suppression du serveur en cours...",
+        "🗑 Reset en cours...",
         ephemeral=True
     )
 
-    for channel in interaction.guild.channels:
+    guild = interaction.guild
+
+    # 🔴 SUPPRIMER SALONS
+    for channel in guild.channels:
         try:
             await channel.delete()
+        except:
+            pass
+
+    # 🔴 SUPPRIMER RÔLES (SAFE)
+    for role in guild.roles:
+        try:
+            if role.name == "@everyone":
+                continue
+            if role.managed:  # bots / intégrations
+                continue
+            if role.position >= guild.me.top_role.position:
+                continue
+
+            await role.delete()
         except:
             pass
 
@@ -51,19 +67,19 @@ async def setup(interaction: discord.Interaction):
 
     if not interaction.user.guild_permissions.administrator:
         return await interaction.response.send_message(
-            "❌ Tu n'as pas la permission.",
+            "❌ Permission refusée.",
             ephemeral=True
         )
 
     guild = interaction.guild
 
     await interaction.response.send_message(
-        "⚡ Création du serveur en cours...",
+        "⚡ Création du serveur...",
         ephemeral=True
     )
 
     # =========================
-    # ROLES
+    # RÔLES
     # =========================
     roles = [
         "👑 Owner",
@@ -73,16 +89,19 @@ async def setup(interaction: discord.Interaction):
         "💎 Premium",
         "🛒 Customer",
         "🧪 Beta Tester",
-        "✅ Verified",
-        "👤 Member"
+        "👤 Member",
+        "✅ Verified"
     ]
 
-    for role in roles:
-        if not discord.utils.get(guild.roles, name=role):
-            await guild.create_role(name=role)
+    for role_name in roles:
+        if not discord.utils.get(guild.roles, name=role_name):
+            try:
+                await guild.create_role(name=role_name)
+            except:
+                pass
 
     # =========================
-    # CATEGORIES
+    # CATÉGORIES
     # =========================
     info = await guild.create_category("📌・INFORMATIONS")
     store = await guild.create_category("🛒・STORE")
@@ -121,7 +140,7 @@ async def setup(interaction: discord.Interaction):
     await guild.create_text_channel("📸・media", category=community)
 
     # =========================
-    # VOICE
+    # VOCAUX
     # =========================
     await guild.create_voice_channel("💬 General", category=voice)
     await guild.create_voice_channel("💻 Coding", category=voice)
