@@ -3,15 +3,15 @@ import os
 
 FILE = "data.json"
 
-DEFAULT = {
+DEFAULT_DATA = {
     "brainrot": {},
     "orders": []
 }
 
 def load():
     if not os.path.exists(FILE):
-        save(DEFAULT)
-        return DEFAULT
+        save(DEFAULT_DATA)
+        return DEFAULT_DATA
 
     with open(FILE, "r", encoding="utf-8") as f:
         return json.load(f)
