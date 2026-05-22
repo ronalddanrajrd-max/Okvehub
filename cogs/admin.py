@@ -3,7 +3,7 @@ from discord.ext import commands
 from database import load, save
 from config import LOG_CHANNEL_ID
 
-async def log(guild, message):
+async def send_log(guild, message):
     channel = guild.get_channel(LOG_CHANNEL_ID)
     if channel:
         await channel.send(message)
@@ -16,12 +16,7 @@ class Admin(commands.Cog):
         return interaction.user.guild_permissions.administrator
 
     @discord.app_commands.command(name="add-brainrot", description="Ajouter du Brainrot")
-    async def add_brainrot(
-        self,
-        interaction: discord.Interaction,
-        user: discord.Member,
-        amount: int
-    ):
+    async def add_brainrot(self, interaction: discord.Interaction, user: discord.Member, amount: int):
         if not self.is_admin(interaction):
             return await interaction.response.send_message("❌ Admin only.", ephemeral=True)
 
@@ -31,40 +26,26 @@ class Admin(commands.Cog):
         data["brainrot"][uid] = data["brainrot"].get(uid, 0) + amount
         save(data)
 
-        embed = discord.Embed(
-            title="🧪 BRAINROT ADDED",
-            description=f"`{amount}` Brainrot ajouté à {user.mention}",
-            color=0x00ff99
-        )
-
-        await log(
+        await send_log(
             interaction.guild,
             f"🧪 {amount} Brainrot ajouté à {user.mention} par {interaction.user.mention}"
         )
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(
+            f"✅ `{amount}` Brainrot ajouté à {user.mention}",
+            ephemeral=True
+        )
 
     @discord.app_commands.command(name="remove-brainrot", description="Retirer du Brainrot")
-    async def remove_brainrot(
-        self,
-        interaction: discord.Interaction,
-        user: discord.Member,
-        amount: int
-    ):
+    async def remove_brainrot(self, interaction: discord.Interaction, user: discord.Member, amount: int):
         if not self.is_admin(interaction):
             return await interaction.response.send_message("❌ Admin only.", ephemeral=True)
 
         data = load()
         uid = str(user.id)
 
-        current = data["brainrot"].get(uid, 0)
-        data["brainrot"][uid] = max(0, current - amount)
+        data["brainrot"][uid] = max(0, data["brainrot"].get(uid, 0) - amount)
         save(data)
-
-        await log(
-            interaction.guild,
-            f"🧪 {amount} Brainrot retiré à {user.mention} par {interaction.user.mention}"
-        )
 
         await interaction.response.send_message(
             f"✅ `{amount}` Brainrot retiré à {user.mention}",
@@ -95,10 +76,7 @@ class Admin(commands.Cog):
         orders = data.get("orders", [])[-10:]
 
         if not orders:
-            return await interaction.response.send_message(
-                "Aucune commande.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("Aucune commande.", ephemeral=True)
 
         text = ""
 
@@ -107,7 +85,7 @@ class Admin(commands.Cog):
                 f"• `{order.get('payment')}` | "
                 f"`{order.get('status')}` | "
                 f"`{order.get('product')}` | "
-                f"{order.get('user')}\n"
+                f"`{order.get('user')}`\n"
             )
 
         embed = discord.Embed(
