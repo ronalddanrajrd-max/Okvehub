@@ -1,17 +1,23 @@
 import json
+import os
 
 FILE = "data.json"
 
+DEFAULT_DATA = {
+    "brainrot": {},
+    "orders": [],
+    "tickets": {},
+    "settings": {}
+}
+
 def load():
-    try:
-        with open(FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {
-            "brainrot": {},
-            "orders": []
-        }
+    if not os.path.exists(FILE):
+        save(DEFAULT_DATA)
+        return DEFAULT_DATA
+
+    with open(FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 def save(data):
-    with open(FILE, "w") as f:
+    with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
