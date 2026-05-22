@@ -3,47 +3,53 @@ from discord.ext import commands
 import requests
 import asyncio
 from database import load, save
-from config import LTC_ADDRESS, CUSTOMER_ROLE_NAME, LOG_CHANNEL_NAME
+from config import (
+    CUSTOMER_ROLE_ID,
+    LOG_CHANNEL_ID,
+    PRODUCT_NAME,
+    PRODUCT_LINK
+)
 
-PRODUCT_NAME = "OkveHUB Premium"
-PRODUCT_LINK = "TON SCRIPT OU TON LIEN ICI"
-
-async def log(guild, text):
-    channel = discord.utils.get(guild.text_channels, name=LOG_CHANNEL_NAME)
+async def log(guild, message):
+    channel = guild.get_channel(LOG_CHANNEL_ID)
     if channel:
-        await channel.send(text)
+        await channel.send(message)
+
+async def give_customer(member):
+    role = member.guild.get_role(CUSTOMER_ROLE_ID)
+    if role:
+        await member.add_roles(role)
 
 async def deliver(user):
     try:
         await user.send(
             f"✅ **OKVEHUB DELIVERY**\n\n"
-            f"Produit : `{PRODUCT_NAME}`\n"
-            f"📦 Accès : `{PRODUCT_LINK}`"
+            f"Produit : `{PRODUCT_NAME}`\n\n"
+            f"📦 Accès :\n`{PRODUCT_LINK}`"
         )
     except:
         pass
-
-async def give_role(member):
-    role = discord.utils.get(member.guild.roles, name=CUSTOMER_ROLE_NAME)
-    if role:
-        await member.add_roles(role)
 
 def roblox_user_id(username):
     r = requests.post(
         "https://users.roblox.com/v1/usernames/users",
         json={"usernames": [username]},
-        timeout=10
+        timeout=15
     )
+
     data = r.json()
+
     if not data.get("data"):
         return None
+
     return data["data"][0]["id"]
 
 def owns_gamepass(user_id, gamepass_id):
     r = requests.get(
         f"https://inventory.roblox.com/v1/users/{user_id}/items/GamePass/{gamepass_id}",
-        timeout=10
+        timeout=15
     )
+
     data = r.json()
     return len(data.get("data", [])) > 0
 
@@ -52,7 +58,12 @@ class Payments(commands.Cog):
         self.bot = bot
 
     @discord.app_commands.command(name="verify-robux", description="Vérifier un achat Robux Gamepass")
-    async def verify_robux(self, interaction: discord.Interaction, username: str, gamepass_id: int):
+    async def verify_robux(
+        self,
+        interaction: discord.Interaction,
+        username: str,
+        gamepass_id: int
+    ):
         await interaction.response.defer(ephemeral=True)
 
         embed = discord.Embed(
@@ -71,7 +82,7 @@ class Payments(commands.Cog):
         ]
 
         for step in steps:
-            embed.description = step
+            embed.description = step + "\n\n`▰▰▱▱▱`"
             await msg.edit(embed=embed)
             await asyncio.sleep(1)
 
@@ -96,7 +107,7 @@ class Payments(commands.Cog):
             embed.color = 0xff0000
             return await msg.edit(embed=embed)
 
-        await give_role(interaction.user)
+        await give_customer(interaction.user)
         await deliver(interaction.user)
 
         data = load()
@@ -111,11 +122,19 @@ class Payments(commands.Cog):
         })
         save(data)
 
-        await log(interaction.guild, f"🎮 Robux validé pour {interaction.user.mention} | Roblox: `{username}`")
+        await log(
+            interaction.guild,
+            f"🎮 Robux validé pour {interaction.user.mention} | Roblox: `{username}`"
+        )
 
         embed.title = "✅ ROBUX PAYMENT CONFIRMED"
-        embed.description = "Achat validé.\n\n📦 Produit envoyé en DM.\n🎖 Rôle Customer ajouté."
+        embed.description = (
+            "Achat validé.\n\n"
+            "📦 Produit envoyé en DM.\n"
+            "🎖 Rôle Customer ajouté."
+        )
         embed.color = 0x00ff00
+
         await msg.edit(embed=embed)
 
 async def setup(bot):
