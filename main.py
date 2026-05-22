@@ -13,7 +13,8 @@ COGS = [
     "cogs.payments",
     "cogs.admin",
     "cogs.moderation",
-    "cogs.announcements"
+    "cogs.announcements",
+    "cogs.server"
 ]
 
 @bot.event
@@ -22,7 +23,7 @@ async def on_ready():
 
     try:
         synced = await bot.tree.sync()
-        print(f"✅ Commandes sync : {len(synced)}")
+        print(f"✅ Commandes synchronisées : {len(synced)}")
     except Exception as e:
         print(f"❌ Erreur sync : {e}")
 
@@ -32,7 +33,7 @@ async def load_cogs():
             await bot.load_extension(cog)
             print(f"✅ Cog chargé : {cog}")
         except Exception as e:
-            print(f"❌ Erreur cog {cog} : {e}")
+            print(f"❌ Erreur cog {cog}: {e}")
 
 async def main():
     async with bot:
