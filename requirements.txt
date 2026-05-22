@@ -1,2 +1,2 @@
-discodiscord.py
+discord.py
 requests
